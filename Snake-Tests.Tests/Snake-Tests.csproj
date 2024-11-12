@@ -16,10 +16,13 @@
     <PackageReference Include="Microsoft.ApplicationInsights.JavaScript" Version="0.15.0-build58334" />
     <PackageReference Include="Microsoft.ApplicationInsights.PerfCounterCollector" Version="1.2.3" />
     <PackageReference Include="Microsoft.ApplicationInsights.Web" Version="1.2.3" />
+    <PackageReference Include="Microsoft.AspNet.Mvc" Version="5.2.3" />
     <PackageReference Include="Microsoft.AspNet.SignalR" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNet.SignalR.Core" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNet.SignalR.JS" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNet.SignalR.SystemWeb" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNet.WebPages" Version="3.2.3" />
+    <PackageReference Include="Microsoft.CodeCoverage" Version="16.5.0" />
     <PackageReference Include="Microsoft.Owin" Version="2.1.0" />
     <PackageReference Include="Microsoft.Owin.Host.SystemWeb" Version="2.1.0" />
     <PackageReference Include="Microsoft.Owin.Security" Version="2.1.0" />
@@ -32,6 +35,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SignalR Snake\SignalR Snake.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Abstractions" />
+    <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.Web.DataVisualization" />
   </ItemGroup>
 
 </Project>
