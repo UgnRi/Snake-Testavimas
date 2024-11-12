@@ -1,8 +1,8 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 namespace Snake_Tests
 {
-    public class SnakeHubTestsTests
+    public class MovementStrategyTests
     {
         [SetUp]
         public void Setup()
