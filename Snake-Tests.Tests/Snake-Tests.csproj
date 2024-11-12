@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net452</TargetFramework>
@@ -8,9 +8,30 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="jQuery" Version="1.10.2" />
+    <PackageReference Include="jQuery.Validation" Version="1.11.1" />
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="1.2.3" />
+    <PackageReference Include="Microsoft.ApplicationInsights.Agent.Intercept" Version="1.2.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights.DependencyCollector" Version="1.2.3" />
+    <PackageReference Include="Microsoft.ApplicationInsights.JavaScript" Version="0.15.0-build58334" />
+    <PackageReference Include="Microsoft.ApplicationInsights.PerfCounterCollector" Version="1.2.3" />
+    <PackageReference Include="Microsoft.ApplicationInsights.Web" Version="1.2.3" />
+    <PackageReference Include="Microsoft.AspNet.SignalR" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNet.SignalR.Core" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNet.SignalR.JS" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNet.SignalR.SystemWeb" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Owin" Version="2.1.0" />
+    <PackageReference Include="Microsoft.Owin.Host.SystemWeb" Version="2.1.0" />
+    <PackageReference Include="Microsoft.Owin.Security" Version="2.1.0" />
+    <PackageReference Include="Microsoft.Web.Infrastructure" Version="1.0.0" />
+    <PackageReference Include="Modernizr" Version="2.6.2" />
     <PackageReference Include="NUnit" Version="3.12.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.16.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0"/>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SignalR Snake\SignalR Snake.csproj" />
   </ItemGroup>
 
 </Project>
