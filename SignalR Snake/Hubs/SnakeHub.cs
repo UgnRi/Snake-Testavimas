@@ -20,6 +20,7 @@ namespace SignalR_Snake.Hubs
 {
     public class SnakeHub : Hub
     {
+        public SnakeHub() { }
         public static List<Snake> Sneks = new List<Snake>();
         public static List<Food> Foods = new List<Food>();
         private static IHubCallerConnectionContext<dynamic> clientsStatic;

@@ -1,100 +1,230 @@
+﻿using Moq;
 using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
 using SignalR_Snake.Hubs;
 using SignalR_Snake.Models;
-using SignalR_Snake.Models.Strategies;
-using SignalR_Snake.Models.Observer;
+using System.Collections.Generic;
 using Microsoft.AspNet.SignalR.Hubs;
-using System.Reflection;
+using SignalR_Snake.Models.Observer;
+using System.Drawing;
 
-
-namespace Snake_Tests
+namespace SnakeHubTests
 {
-    public class SnakeHubTestsTests
+    [TestFixture]
+    public class SnakeHubTests
     {
         private SnakeHub _snakeHub;
-        private StubHubCallerConnectionContext<dynamic> _stubContext;
+        private Mock<IHubCallerConnectionContext<dynamic>> _mockClients;
+        private Mock<HubCallerContext> _mockContext;
 
         [SetUp]
         public void SetUp()
         {
-            // Initialize the SnakeHub and stub context
             _snakeHub = new SnakeHub();
-            _stubContext = new StubHubCallerConnectionContext<dynamic>();
+            _mockClients = new Mock<IHubCallerConnectionContext<dynamic>>();
+            _mockContext = new Mock<HubCallerContext>();
 
-            // Use reflection to set the private static clientsStatic field in SnakeHub
-            var clientsStaticField = typeof(SnakeHub).GetField("clientsStatic", BindingFlags.NonPublic | BindingFlags.Static);
-            clientsStaticField.SetValue(null, _stubContext);  // Set static field to stub context
-
+            _snakeHub.Clients = _mockClients.Object;
+            _snakeHub.Context = _mockContext.Object;
         }
 
-    }
-
-    public class StubClient
-    {
-        public void Died()
+        [TearDown]
+        public void TearDown()
         {
-            // Simulate a no-op for the Died method
+            SnakeHub.Sneks.Clear();
+            SnakeHub.Foods.Clear();
         }
 
-        public void AllPos(List<SnekPart> parts, Point myPoint, List<Food> foods)
+
+        [Test]
+        public void NewSnek_ShouldAddNewSnake()
         {
-            // Simulate a no-op for AllPos
+            // Arrange
+            string snakeName = "TestSnake";
+            _mockContext.Setup(c => c.ConnectionId).Returns("test-connection-id");
+
+            // Act
+            _snakeHub.NewSnek(snakeName);
+
+            // Assert
+            Assert.AreEqual(1, SnakeHub.Sneks.Count);
+            Assert.AreEqual(snakeName, SnakeHub.Sneks[0].Name);
+            Assert.AreEqual("test-connection-id", SnakeHub.Sneks[0].ConnectionId);
         }
 
-        public void Score(List<SnekScore> scores)
+        [Test]
+        public void RegisterObserver_ShouldAddObserver()
         {
-            // Simulate a no-op for Score
+            // Arrange
+            var observerMock = new Mock<ISnakeObserver>();
+
+            // Act
+            _snakeHub.RegisterObserver(observerMock.Object);
+
+            // Assert
+            Assert.Contains(observerMock.Object, _snakeHub.observers);
         }
-    }
 
-    public class StubHubConnectionContext<T> : IHubConnectionContext<T>
-    {
-        public T All { get; private set; }
-        public T AllExcept(params string[] excludeConnectionIds) { return default(T); }
-        public T Client(string connectionId) { return default(T); }
-        public T Clients(IList<string> connectionIds) { return default(T); }
-        public T Group(string groupName, params string[] excludeConnectionIds) { return default(T); }
-        public T Groups(IList<string> groupNames, params string[] excludeConnectionIds) { return default(T); }
-        public T User(string userId) { return default(T); }
-        public T Users(IList<string> userIds) { return default(T); }
-    }
-
-    public class StubHubCallerConnectionContext<T> : StubHubConnectionContext<T>, IHubCallerConnectionContext<T>
-    {
-        public List<string> Calls = new List<string>(); // Track method calls
-        public T Caller { get; private set; }
-        public dynamic CallerState { get; private set; }
-        public T Others { get; private set; }
-
-        public T OthersInGroup(string groupName)
+        [Test]
+        public void RemoveObserver_ShouldRemoveObserver()
         {
-            Calls.Add("OthersInGroup");
-            return default(T);
+            // Arrange
+            var observerMock = new Mock<ISnakeObserver>();
+            _snakeHub.RegisterObserver(observerMock.Object);
+
+            // Act
+            _snakeHub.RemoveObserver(observerMock.Object);
+
+            // Assert
+            Assert.IsFalse(_snakeHub.observers.Contains(observerMock.Object));
         }
 
-        public T OthersInGroups(IList<string> groupNames)
+        [Test]
+        public void NotifySnakeUpdated_ShouldNotifyAllObservers()
         {
-            Calls.Add("OthersInGroups");
-            return default(T);
+            // Arrange
+            var observerMock = new Mock<ISnakeObserver>();
+            _snakeHub.RegisterObserver(observerMock.Object);
+            var snake = new Snake { Name = "TestSnake" };
+
+            // Act
+            _snakeHub.NotifySnakeUpdated(snake);
+
+            // Assert
+            observerMock.Verify(o => o.OnSnakeUpdated(snake), Times.Once);
         }
 
-        public void Died()
+        public interface IPositionClient
         {
-            Calls.Add("Died");
+            void AllPos(List<SnekPart> snakeParts, Point myPoint, List<Food> foods);
         }
 
-        public void AllPos(List<SnekPart> parts, Point myPoint, List<Food> foods)
+        [Test]
+        public void AllPos_ShouldSendAllPositionsToCaller()
         {
-            Calls.Add("AllPos");
+            // Arrange
+            string snakeName = "TestSnake";
+
+            // Set up Context.ConnectionId
+            _mockContext.Setup(c => c.ConnectionId).Returns("test-connection-id");
+            _snakeHub.Context = _mockContext.Object;
+
+            // Add a new snake
+            _snakeHub.NewSnek(snakeName);
+
+            // Set up Clients.Caller mock
+            var mockCaller = new Mock<IPositionClient>();
+            _mockClients.Setup(clients => clients.Caller).Returns(mockCaller.Object);
+            _snakeHub.Clients = _mockClients.Object;
+
+            // Act
+            _snakeHub.AllPos();
+
+            // Assert
+            mockCaller.Verify(c => c.AllPos(It.IsAny<List<SnekPart>>(), It.IsAny<Point>(), It.IsAny<List<Food>>()), Times.Once);
         }
 
-        public void Score(List<SnekScore> scores)
+        //5
+        //[Test]
+        //public void Score_ShouldSendOrderedScoresToCaller()
+        //{
+        //    // Arrange
+        //    _snakeHub.NewSnek("Snake1");
+        //    _snakeHub.NewSnek("Snake2");
+        //    SnakeHub.Sneks[0].Parts.Add(new SnekPart());
+        //    var mockCaller = new Mock<dynamic>();
+        //    _mockClients.Setup(clients => clients.Caller).Returns(mockCaller.Object);
+        //
+        //    // Act
+        //    _snakeHub.Score();
+        //
+        //    // Assert
+        //    mockCaller.Verify(c => c.Score(It.IsAny<IEnumerable<SnekScore>>()), Times.Once);
+        //}
+
+        //6
+        [Test]
+        public void SendDir_ShouldUpdateSnakeDirection()
         {
-            Calls.Add("Score");
+            // Arrange
+            string snakeName = "TestSnake";
+            double newDirection = 90;
+
+            // Set up Context.ConnectionId
+            _mockContext.Setup(c => c.ConnectionId).Returns("test-connection-id");
+            _snakeHub.Context = _mockContext.Object;
+
+            // Add a new snake
+            _snakeHub.NewSnek(snakeName);
+
+            // Act
+            _snakeHub.SendDir(newDirection);
+
+            // Assert
+            Assert.AreEqual(newDirection, SnakeHub.Sneks[0].Dir);
         }
+
+
+        [Test]
+        public void Speed_ShouldToggleSnakeSpeed()
+        {
+            // Arrange
+            string snakeName = "TestSnake";
+
+            // Set up Context.ConnectionId
+            _mockContext.Setup(c => c.ConnectionId).Returns("test-connection-id");
+            _snakeHub.Context = _mockContext.Object;
+
+            // Add a new snake
+            _snakeHub.NewSnek(snakeName);
+
+            // Store the initial speed state
+            bool initialSpeed = SnakeHub.Sneks[0].Fast;
+
+            // Act
+            _snakeHub.Speed();  // This should toggle the speed
+
+            // Assert
+            Assert.AreNotEqual(initialSpeed, SnakeHub.Sneks[0].Fast);
+        }
+
+
+        //8
+        public interface IScoreClient
+        {
+            void Score(IEnumerable<SnekScore> scores);
+        }
+
+        [Test]
+        public void Score_ShouldSendOrderedScoresToCaller()
+        {
+            // Arrange
+            _mockContext.Setup(c => c.ConnectionId).Returns("test-connection-id-1");
+            _snakeHub.Context = _mockContext.Object;
+
+            _snakeHub.NewSnek("Snake1");
+
+            _mockContext.Setup(c => c.ConnectionId).Returns("test-connection-id-2");
+            _snakeHub.Context = _mockContext.Object;
+
+            _snakeHub.NewSnek("Snake2");
+
+            SnakeHub.Sneks[0].Parts.Add(new SnekPart());  // Increase the score of the first snake
+
+            // Create a mock for the caller
+            var mockCaller = new Mock<IScoreClient>();
+            _mockClients.Setup(clients => clients.Caller).Returns(mockCaller.Object);
+            _snakeHub.Clients = _mockClients.Object;
+
+            // Act
+            _snakeHub.Score();
+
+            // Assert
+            mockCaller.Verify(c => c.Score(It.IsAny<IEnumerable<SnekScore>>()), Times.Once);
+        }
+
+
     }
 }
+
+
+
