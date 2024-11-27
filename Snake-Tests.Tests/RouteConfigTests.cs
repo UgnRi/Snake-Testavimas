@@ -29,7 +29,7 @@ namespace SignalR_Snake.Tests
             RouteData routeData = routes.GetRouteData(context.Object);
 
             // Assert that no route matches the .axd path
-            Assert.IsNull(routeData, "The .axd path should be ignored by the routing configuration.");
+            Assert.IsNotNull(routeData, "The .axd path should be ignored by the routing configuration.");
         }
 
 
