@@ -11,7 +11,7 @@ change .csproj version
 build on release
 dotnet build -c Release
 dotnet pack -c Release
-dotnet nuget push C:\Users\marti\Desktop\GItHub\Snake-Testavimas\PerformanceAnalyzer\PerformanceAnalyzer.Package\bin\Release\PerformanceAnalyzer.x.x.0.nupkg -k oy2fajj3ecxlytirpqpqixkhbh5ilj5ujddyg2pwgmbyo4 -s https://api.nuget.org/v3/index.json
+dotnet nuget push <NuGetAPIKey>-s
 
  
  
